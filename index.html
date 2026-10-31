@@ -1,6 +1,660 @@
 <!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
-<title>Sound Instruments</title>
-<meta http-equiv="refresh" content="0; url=audio-instruments/">
-<link rel="canonical" href="https://alexbw.github.io/oScope-Website/audio-instruments/">
-<a href="audio-instruments/">Sound Instruments</a>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pocket Instruments: Fourier, oScope, Octave and Soundscape for iPhone and iPad</title>
+<meta name="description" content="Four free audio instruments for iPhone and iPad: a spectrum analyzer, an oscilloscope, an ANSI octave-band analyzer and a live spectrogram. Pro is a one-time unlock.">
+<link rel="canonical" href="https://pocketinstruments.app/">
+<meta name="theme-color" content="#0a0a0b">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Pocket Instruments">
+<meta property="og:title" content="Four ways to see sound">
+<meta property="og:description" content="Fourier, oScope, Octave and Soundscape: free audio instruments for iPhone and iPad. Every frame in the films is the real app drawing the music.">
+<meta property="og:url" content="https://pocketinstruments.app/">
+<meta property="og:image" content="https://pocketinstruments.app/media/share.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Fourier, oScope, Octave and Soundscape screens, with the words: Four ways to see sound.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="icons/oscope.png">
+<link rel="apple-touch-icon" href="icons/oscope.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112..125,600..900&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+ {"@type":"MobileApplication","name":"Fourier: Spectrum Analyzer","operatingSystem":"iOS 17 or later","applicationCategory":"UtilitiesApplication","url":"https://apps.apple.com/app/id386084557","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}},
+ {"@type":"MobileApplication","name":"oScope: Audio Oscilloscope","operatingSystem":"iOS 17 or later","applicationCategory":"UtilitiesApplication","url":"https://apps.apple.com/app/id344345859","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}},
+ {"@type":"MobileApplication","name":"Octave: Real-Time Analyzer","operatingSystem":"iOS 17 or later","applicationCategory":"UtilitiesApplication","url":"https://apps.apple.com/app/id386083594","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}},
+ {"@type":"MobileApplication","name":"Soundscape: Audio Spectrogram","operatingSystem":"iOS 17 or later","applicationCategory":"UtilitiesApplication","url":"https://apps.apple.com/app/id6819117901","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+]}
+</script>
+<style>
+/* Layout: a rack of instrument front panels. Each app is a module with its own trace color; octave rulers divide the rack. */
+:root {
+  --panel: #0a0a0b;        /* the instruments' black glass */
+  --rack: #121214;         /* module faces */
+  --graticule: rgba(237, 234, 228, 0.07);
+  --line: rgba(237, 234, 228, 0.12);
+  --ink: #edeae4;
+  --muted: #a39f97;
+  --amber: #ffc21a;        /* the icons' trace */
+  --fourier: #ff4a3d;
+  --oscope: #ffe21a;
+  --octave: #ff8a1a;
+  --soundscape: #ff6a3d;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --gutter: clamp(16px, 4vw, 48px);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { background: var(--panel); scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--panel);
+  color: var(--ink);
+  font: 400 17px/1.55 var(--body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 4px; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: var(--gutter); }
+[hidden] { display: none !important; }
+
+/* brand bar: the maker's name over every collection */
+.brandbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; padding-block: 18px; }
+.wordmark { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font: 800 17px/1 var(--display); font-stretch: 118%; letter-spacing: -0.01em; }
+.wordmark svg { width: 28px; height: 16px; color: var(--amber); }
+.brandbar .links { display: flex; flex-wrap: wrap; gap: 6px 20px; font: 500 13px/1 var(--mono); }
+.brandbar .links a { color: var(--muted); text-decoration: none; }
+.brandbar .links a:hover { color: var(--ink); }
+.select { user-select: all; font-family: var(--mono); font-size: 14px; }
+@media (max-width: 560px) { .brandbar .links a:not([href="#get"]) { display: none; } }
+
+/* graticule behind the hero, as on a scope screen */
+.hero {
+  position: relative;
+  padding-block: clamp(40px, 8vw, 96px) clamp(48px, 7vw, 88px);
+  background-image:
+    linear-gradient(var(--graticule) 1px, transparent 1px),
+    linear-gradient(90deg, var(--graticule) 1px, transparent 1px);
+  background-size: 56px 56px;
+  background-position: center top;
+  -webkit-mask-image: linear-gradient(#000 70%, transparent);
+          mask-image: linear-gradient(#000 70%, transparent);
+}
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: clamp(32px, 6vw, 80px); align-items: center; }
+.eyebrow { font: 500 13px/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+h1, h2, h3 { font-family: var(--display); font-stretch: 118%; letter-spacing: -0.02em; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(46px, 8.2vw, 104px); font-weight: 900; line-height: 0.93; margin-block: 18px 22px; }
+h1 em { font-style: normal; color: var(--amber); }
+.lede { font-size: clamp(18px, 2vw, 21px); color: var(--muted); max-width: 34em; margin: 0; }
+.lede strong { color: var(--ink); font-weight: 600; }
+
+.icons { display: flex; flex-wrap: wrap; gap: 14px 22px; margin-block: 34px 30px; padding: 0; list-style: none; }
+.icons li { display: flex; align-items: center; gap: 10px; font: 600 15px/1 var(--body); }
+.icons a { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.icons img { width: 44px; height: 44px; border-radius: 10px; box-shadow: 0 0 0 1px rgba(255,255,255,0.08); }
+.icons span small { display: block; font: 400 12px/1.3 var(--mono); color: var(--muted); margin-top: 3px; }
+
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center; }
+.status {
+  display: inline-flex; align-items: center; gap: 10px;
+  font: 500 14px/1.2 var(--mono); color: var(--ink);
+  border: 1px solid rgba(255,194,26,0.4); border-radius: 999px; padding: 10px 16px;
+}
+.status::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 12px var(--amber); }
+.button {
+  display: inline-flex; align-items: center; gap: 10px; text-decoration: none;
+  font: 600 16px/1 var(--body); color: #000; background: var(--amber);
+  border-radius: 999px; padding: 14px 20px; box-shadow: 0 10px 30px rgba(255,194,26,0.18);
+}
+.button svg { width: 16px; height: 16px; }
+.quiet-link { font: 500 14px/1.4 var(--mono); color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--line); }
+.quiet-link:hover { color: var(--ink); }
+
+/* a vertical film card (the films carry their own phone) */
+.phone {
+  position: relative; width: 100%; max-width: 340px; margin-inline: auto;
+  aspect-ratio: 9 / 16; border-radius: 22px; overflow: hidden; background: #000;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.09);
+}
+.phone video { display: block; width: 100%; height: 100%; object-fit: cover; background: #000; }
+.film { position: relative; }
+.film .play {
+  position: absolute; inset: auto 0 22px 0; margin-inline: auto; width: max-content;
+  display: inline-flex; align-items: center; gap: 10px;
+  font: 600 15px/1 var(--body); color: #000; background: var(--ink);
+  border: 0; border-radius: 999px; padding: 12px 18px; cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.film .play svg { width: 14px; height: 14px; }
+.film.playing .play { opacity: 0; pointer-events: none; }
+.hero .film::after {
+  content: ""; position: absolute; inset: 10% -10%; z-index: -1;
+  background: radial-gradient(closest-side, rgba(255,194,26,0.28), transparent);
+  filter: blur(30px);
+}
+
+/* octave ruler: octave-band centres are equally spaced on a log axis */
+.ruler { border-top: 1px solid var(--graticule); padding-top: 8px; display: flex; justify-content: space-between; font: 400 11px/1 var(--mono); color: #5d5a55; letter-spacing: 0.04em; margin-block: 0; }
+.ruler span { position: relative; padding-top: 6px; }
+.ruler span::before { content: ""; position: absolute; top: -8px; left: 50%; height: 8px; border-left: 1px solid #3a3835; }
+
+/* modules */
+.module { padding-block: clamp(56px, 8vw, 104px); }
+.module-grid { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: clamp(32px, 6vw, 88px); align-items: center; }
+.module.flip .module-grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr); }
+.module.flip .film { order: 2; }
+.module h2 { font-size: clamp(36px, 5.4vw, 64px); font-weight: 900; line-height: 0.98; margin-block: 14px 18px; }
+.module h2 .name { color: var(--accent); }
+.module p { margin: 0 0 18px; max-width: 36em; }
+.module .eyebrow { color: var(--accent); }
+.module .phone { box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 90px color-mix(in srgb, var(--accent) 22%, transparent), 0 0 0 1px rgba(255,255,255,0.06) inset; }
+.does { list-style: none; padding: 0; margin: 22px 0 26px; display: grid; gap: 10px; }
+.does li { position: relative; padding-left: 28px; }
+.does li::before { content: ""; position: absolute; left: 0; top: 0.78em; width: 10px; height: 2px; background: var(--accent); }
+.pro {
+  display: inline-block; font: 700 10px/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent, var(--amber)); border: 1px solid color-mix(in srgb, var(--accent, var(--amber)) 60%, transparent);
+  border-radius: 4px; padding: 3px 5px 2px; margin-left: 6px; vertical-align: 2px;
+}
+
+/* the panel readout: label over value, engraved */
+.readout {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px;
+  background: var(--graticule); border: 1px solid var(--graticule); border-radius: 10px; overflow: hidden; margin: 0;
+}
+.readout div { background: var(--rack); padding: 14px 16px; min-width: 0; }
+.readout dt { font: 500 11px/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.readout dd { margin: 0; font: 500 15px/1.35 var(--mono); color: var(--ink); font-variant-numeric: tabular-nums; }
+
+.store { margin-top: 26px; display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center; font: 500 14px/1.4 var(--mono); color: var(--muted); }
+.store .get {
+  text-decoration: none; font: 600 15px/1 var(--body); color: #000; background: var(--accent);
+  border-radius: 999px; padding: 12px 18px;
+}
+.store .soon { color: var(--ink); border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); border-radius: 999px; padding: 9px 14px; }
+
+/* uses */
+.section { padding-block: clamp(56px, 8vw, 104px); border-top: 1px solid var(--graticule); }
+.section > .wrap > h2 { font-size: clamp(34px, 5vw, 58px); font-weight: 900; line-height: 1; margin-block: 14px 14px; }
+.section .intro { color: var(--muted); max-width: 40em; margin: 0 0 clamp(28px, 4vw, 44px); font-size: 18px; }
+.uses { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--graticule); border: 1px solid var(--graticule); border-radius: 14px; overflow: hidden; }
+.use { background: var(--panel); padding: clamp(22px, 3vw, 34px); min-width: 0; }
+.use h3 { font-size: 24px; font-weight: 800; line-height: 1.1; margin-bottom: 10px; }
+.use .tag { font: 500 12px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; display: block; }
+.use p { color: var(--muted); margin: 0 0 12px; }
+.use ol { margin: 0; padding-left: 1.2em; color: var(--muted); display: grid; gap: 6px; }
+.use ol b { color: var(--ink); font-weight: 600; }
+.use a { color: var(--accent); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+
+/* free and pro */
+.plans { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.plan {
+  background: var(--rack); border: 1px solid var(--graticule); border-radius: 14px; padding: 22px; min-width: 0;
+  display: flex; flex-direction: column; gap: 14px;
+  box-shadow: inset 0 2px 0 color-mix(in srgb, var(--accent) 70%, transparent);
+}
+.plan header { display: flex; align-items: center; gap: 12px; }
+.plan header img { width: 44px; height: 44px; border-radius: 10px; }
+.plan h3 { font-size: 22px; font-weight: 800; }
+.plan h3 small { display: block; font: 400 12px/1.3 var(--mono); color: var(--muted); letter-spacing: 0; margin-top: 3px; }
+.plan h4 { font: 600 11px/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 4px 0 8px; }
+.plan h4.p { color: var(--accent); }
+.plan ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; font-size: 15px; line-height: 1.4; }
+.plan ul li { padding-left: 14px; position: relative; }
+.plan ul li::before { content: ""; position: absolute; left: 0; top: 0.62em; width: 6px; height: 1.5px; background: var(--muted); }
+.plan .p + ul li::before { background: var(--accent); }
+.plan .price { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--graticule); font: 500 14px/1.4 var(--mono); color: var(--muted); }
+.plan .price b { color: var(--ink); font-size: 20px; font-weight: 700; }
+.plan .store { margin-top: 0; }
+.promises { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+.promise { border: 1px solid var(--graticule); border-radius: 14px; padding: 20px 22px; }
+.promise h3 { font-size: 18px; font-stretch: 112%; font-weight: 700; margin-bottom: 6px; }
+.promise p { color: var(--muted); margin: 0; font-size: 15px; }
+
+/* real footage + history */
+.notes { padding-block: clamp(48px, 7vw, 88px); border-top: 1px solid var(--graticule); }
+.notes-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(28px, 5vw, 64px); }
+.notes h2 { font-size: clamp(28px, 3.6vw, 40px); font-weight: 800; line-height: 1.05; margin-bottom: 14px; }
+.notes p { color: var(--muted); margin: 0 0 14px; max-width: 34em; }
+.notes p strong { color: var(--ink); font-weight: 600; }
+.timeline { list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 10px; }
+.timeline li { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 14px; color: var(--muted); }
+.timeline b { font: 700 14px/1.6 var(--mono); color: var(--amber); }
+
+/* help */
+.help { padding-block: clamp(48px, 7vw, 96px); border-top: 1px solid var(--graticule); }
+.help h2 { font-size: clamp(30px, 4vw, 44px); font-weight: 900; margin-bottom: 28px; }
+.help-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px clamp(28px, 5vw, 64px); }
+.help h3 { font-size: 19px; font-stretch: 112%; font-weight: 700; margin-bottom: 8px; }
+.help p { color: var(--muted); margin: 0; }
+
+/* press */
+.press { padding-block: clamp(40px, 6vw, 72px); border-top: 1px solid var(--graticule); }
+.press-grid { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(28px, 5vw, 64px); }
+.press h2 { font-size: clamp(26px, 3.4vw, 36px); font-weight: 800; margin-block: 12px 12px; }
+.press p { color: var(--muted); margin: 0 0 12px; }
+.files { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 20px; font: 500 14px/1.5 var(--mono); }
+.files a { text-decoration: none; border-bottom: 1px solid var(--line); }
+.files small { color: var(--muted); }
+.facts { margin: 18px 0 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 16px; font-size: 15px; }
+.facts dt { font: 500 12px/1.9 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.facts dd { margin: 0; }
+
+footer { padding-block: 36px 56px; border-top: 1px solid var(--graticule); font: 400 13px/1.6 var(--mono); color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; }
+
+@media (max-width: 1020px) {
+  .plans { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 860px) {
+  .hero-grid, .module-grid, .module.flip .module-grid, .notes-grid, .help-grid, .uses, .press-grid, .promises { grid-template-columns: minmax(0, 1fr); }
+  .module.flip .film { order: 0; }
+  .phone { max-width: 300px; }
+  .ruler span:nth-child(even) { visibility: hidden; }
+}
+@media (max-width: 560px) {
+  .plans, .files { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+
+<nav class="brandbar wrap" aria-label="Pocket Instruments">
+  <a class="wordmark" href="./"><svg viewBox="0 0 28 16" aria-hidden="true"><path d="M1 8h4l2-6 3 12 3-10 2 6 2-3h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Pocket Instruments</a>
+  <span class="links"><a href="#fourier">Instruments</a><a href="#get">Free &amp; Pro</a><a href="#help">Help</a><a href="#press">Press</a></span>
+</nav>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow">Sound Instruments · free for iPhone and iPad</div>
+      <h1>Four ways to <em>see</em> sound.</h1>
+      <p class="lede">Play a note, whistle, talk or turn up a song, and watch it from four sides: its <strong>frequencies</strong>, its <strong>waveform</strong>, its <strong>octave bands</strong> and its <strong>history</strong>. Live, on your phone, from the microphone. <strong>Free to download.</strong></p>
+      <ul class="icons" aria-label="The instruments">
+        <li><a href="#fourier"><img src="icons/fourier.png" alt=""><span>Fourier<small>frequency</small></span></a></li>
+        <li><a href="#oscope"><img src="icons/oscope.png" alt=""><span>oScope<small>waveform</small></span></a></li>
+        <li><a href="#octave"><img src="icons/octave.png" alt=""><span>Octave<small>octave bands</small></span></a></li>
+        <li><a href="#soundscape"><img src="icons/soundscape.png" alt=""><span>Soundscape<small>time</small></span></a></li>
+      </ul>
+      <div class="cta-row">
+        <span class="status" id="status">Coming soon to the App Store, free</span>
+        <a class="button" id="hero-get" href="#get" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v9M4 7.5 8 11.5l4-4M3 14h10" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Get them free</a>
+        <a class="quiet-link" href="#get">What's free, what's Pro</a>
+      </div>
+    </div>
+    <div class="film" data-autoplay>
+      <div class="phone"><video id="trailer" src="media/soundinstruments.mp4" poster="media/soundinstruments.jpg" muted loop playsinline preload="metadata" aria-label="Sound Instruments trailer"></video></div>
+      <button class="play" type="button" data-sound><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6h3l4-3v10l-4-3H2z" fill="currentColor"/><path d="M11 5.5c1 .8 1 4.2 0 5M12.8 3.8c2 1.8 2 6.6 0 8.4" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>Sound on</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap"><p class="ruler" aria-hidden="true"><span>31.5</span><span>63</span><span>125</span><span>250</span><span>500</span><span>1k</span><span>2k</span><span>4k</span><span>8k</span><span>16k</span></p></div>
+
+<section class="module" id="fourier" style="--accent: var(--fourier)">
+  <div class="wrap module-grid">
+    <div class="film">
+      <div class="phone"><video src="media/fourier.mp4" poster="media/fourier.jpg" playsinline preload="none" aria-label="Fourier film"></video></div>
+      <button class="play" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2l10 6-10 6z" fill="currentColor"/></svg>Play the film</button>
+    </div>
+    <div>
+      <div class="eyebrow">Spectrum analyzer</div>
+      <h2><span class="name">Fourier.</span> See every frequency.</h2>
+      <p>A single note is never just one frequency. Fourier draws the whole stack, one sharp peak per tone: the fundamental, every harmonic above it, and how a filter or a change of waveform reshapes them.</p>
+      <ul class="does">
+        <li>Drag across the spectrum to read frequency, level and musical note.</li>
+        <li>Pinch to zoom frequency, pinch up and down to set the level, and pan with two fingers.</li>
+        <li>Hold peaks, choose an FFT window up to 8,192 samples, and play pink noise. <span class="pro">Pro</span></li>
+        <li>Save a spectrum as a reference over the live one, and export CSV. <span class="pro">Pro</span></li>
+      </ul>
+      <dl class="readout">
+        <div><dt>Range</dt><dd>20 Hz – 20 kHz</dd></div>
+        <div><dt>Window</dt><dd>Up to 8,192 points</dd></div>
+        <div><dt>Readout</dt><dd>Hz · dBFS · note</dd></div>
+      </dl>
+      <div class="store" data-app="fourier"></div>
+    </div>
+  </div>
+</section>
+
+<section class="module flip" id="oscope" style="--accent: var(--oscope)">
+  <div class="wrap module-grid">
+    <div class="film">
+      <div class="phone"><video src="media/oscope.mp4" poster="media/oscope.jpg" playsinline preload="none" aria-label="oScope film"></video></div>
+      <button class="play" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2l10 6-10 6z" fill="currentColor"/></svg>Play the film</button>
+    </div>
+    <div>
+      <div class="eyebrow">Oscilloscope</div>
+      <h2><span class="name">oScope.</span> Watch sound move.</h2>
+      <p>Live mode scrolls the last two seconds of sound across the screen. Trigger mode catches a repeating wave and holds it still, so a sine, a square and a sawtooth each show their true shape.</p>
+      <ul class="does">
+        <li>Pinch sideways from 2 seconds down to 0.2 milliseconds, and up and down for amplitude.</li>
+        <li>Go full screen, freeze a moment and look closely.</li>
+        <li>Trigger: drag the level, pick a rising or falling edge, and hold a steady sweep. <span class="pro">Pro</span></li>
+        <li>Average 4, 16 or 64 sweeps to pull a signal out of noise; save and export. <span class="pro">Pro</span></li>
+      </ul>
+      <dl class="readout">
+        <div><dt>Time</dt><dd>0.2 ms – 2 s</dd></div>
+        <div><dt>Modes</dt><dd>Live · Trigger</dd></div>
+        <div><dt>Averaging</dt><dd>4 · 16 · 64</dd></div>
+      </dl>
+      <div class="store" data-app="oscope"></div>
+    </div>
+  </div>
+</section>
+
+<section class="module" id="octave" style="--accent: var(--octave)">
+  <div class="wrap module-grid">
+    <div class="film">
+      <div class="phone"><video src="media/octave.mp4" poster="media/octave.jpg" playsinline preload="none" aria-label="Octave film"></video></div>
+      <button class="play" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2l10 6-10 6z" fill="currentColor"/></svg>Play the film</button>
+    </div>
+    <div>
+      <div class="eyebrow">Real-time analyzer</div>
+      <h2><span class="name">Octave.</span> Octave bands, done right.</h2>
+      <p>The bands sound engineers use to tune rooms, cars and PA systems, built to the ANSI and IEC filter standards. Pink noise reads flat, the way it should. Find the bass, then average over exactly the time you hold your finger down.</p>
+      <ul class="does">
+        <li>Whole, third, sixth and twelfth-octave bands, all free.</li>
+        <li>Tap a band to read its level and name; step through bands with the arrows.</li>
+        <li>Hold to record an Leq average and keep it on screen; Slow weighting. <span class="pro">Pro</span></li>
+        <li>Pink noise, saved reference traces to compare EQ changes, CSV export. <span class="pro">Pro</span></li>
+      </ul>
+      <dl class="readout">
+        <div><dt>Bands</dt><dd>1 · 1/3 · 1/6 · 1/12 oct</dd></div>
+        <div><dt>Filters</dt><dd>ANSI S1.11 / IEC 61260-1</dd></div>
+        <div><dt>Weighting</dt><dd>Fast · Slow · Leq</dd></div>
+      </dl>
+      <div class="store" data-app="octave"></div>
+    </div>
+  </div>
+</section>
+
+<section class="module flip" id="soundscape" style="--accent: var(--soundscape)">
+  <div class="wrap module-grid">
+    <div class="film">
+      <div class="phone"><video src="media/soundscape.mp4" poster="media/soundscape.jpg" playsinline preload="none" aria-label="Soundscape film"></video></div>
+      <button class="play" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2l10 6-10 6z" fill="currentColor"/></svg>Play the film</button>
+    </div>
+    <div>
+      <div class="eyebrow">Live spectrogram · new</div>
+      <h2><span class="name">Soundscape.</span> See sound over time.</h2>
+      <p>Pitch runs up the screen, time runs across it, loudness becomes color. A whistle draws a line, a voice draws stripes, and a song fills the screen layer by layer. In the film, the music spells words, and Soundscape draws them.</p>
+      <ul class="does">
+        <li>Touch any line to read its frequency, level and note.</li>
+        <li>Pinch sideways to zoom in time, up and down to zoom frequency, and drag to scroll.</li>
+        <li>Record up to ten minutes and replay it with its spectrogram. <span class="pro">Pro</span></li>
+        <li>Compare two snapshots side by side; more color maps, a decibel scale and CSV export. <span class="pro">Pro</span></li>
+      </ul>
+      <dl class="readout">
+        <div><dt>Axis</dt><dd>Log frequency</dd></div>
+        <div><dt>Color</dt><dd>Linear or dB scale</dd></div>
+        <div><dt>Readout</dt><dd>Hz · dBFS · note</dd></div>
+      </dl>
+      <div class="store" data-app="soundscape"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="uses">
+  <div class="wrap">
+    <div class="eyebrow">What they're for</div>
+    <h2>Bring them to the job.</h2>
+    <p class="intro">Each instrument does one thing well. Here is how people put them to work.</p>
+    <div class="uses">
+      <div class="use" style="--accent: var(--octave)">
+        <span class="tag">Car audio · Octave</span>
+        <h3>Tune a car stereo with pink noise.</h3>
+        <ol>
+          <li>Play Octave's <b>pink noise</b> through the car's speakers.</li>
+          <li>Set <b>1/3 octave</b>, sit in the driver's seat and <b>hold to average</b> while you move the phone around your head.</li>
+          <li><b>Save it</b> as a reference, change the DSP's EQ, and measure again over the saved trace.</li>
+        </ol>
+      </div>
+      <div class="use" style="--accent: var(--fourier)">
+        <span class="tag">Live and church sound · Fourier, Octave</span>
+        <h3>Find the feedback before the congregation does.</h3>
+        <p>When a monitor starts to ring, Fourier shows a single tall peak with its exact frequency and note. Octave tells you which third-octave band to pull down on the graphic EQ. Pink noise and an average show the room's response at the mix position.</p>
+      </div>
+      <div class="use" style="--accent: var(--oscope)">
+        <span class="tag">Synths and music · Fourier, oScope</span>
+        <h3>See why a square wave sounds hollow.</h3>
+        <p>oScope shows the shape; Fourier shows that a square wave has only odd harmonics while a sawtooth has all of them. Sweep a filter and watch the harmonics fall away. Whistle and read your pitch as a note.</p>
+      </div>
+      <div class="use" style="--accent: var(--soundscape)">
+        <span class="tag">Teaching · all four, free</span>
+        <h3>A physics lab in every pocket.</h3>
+        <p>Everything a class needs is free: the spectrum, the waveform, the bands, the spectrogram, and touch readouts in hertz and notes. A built-in demo signal works without the microphone, so a whole room can follow along.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="get">
+  <div class="wrap">
+    <div class="eyebrow">Free and Pro</div>
+    <h2>Free to watch. Pro to measure.</h2>
+    <p class="intro">Every app is free: the live instrument and its readouts, with no time limit. Pro is a one-time purchase per app that gives you full control and the tools of a measurement session: hold, compare, generate and keep.</p>
+    <div class="plans">
+      <article class="plan" style="--accent: var(--fourier)">
+        <header><img src="icons/fourier.png" alt=""><h3>Fourier<small>spectrum analyzer</small></h3></header>
+        <div><h4>Free</h4><ul><li>Live spectrum, log or linear</li><li>Touch readout: Hz, level, note</li><li>Pinch zoom, freeze, test tone</li></ul></div>
+        <div><h4 class="p">Pro</h4><ul><li>Peak hold and decay</li><li>FFT window 256 to 8,192</li><li>Snapshots as references</li><li>Pink noise</li><li>CSV export</li></ul></div>
+        <div class="price"><b>$9.99</b> once for Pro</div>
+        <div class="store" data-app="fourier" data-compact></div>
+      </article>
+      <article class="plan" style="--accent: var(--oscope)">
+        <header><img src="icons/oscope.png" alt=""><h3>oScope<small>oscilloscope</small></h3></header>
+        <div><h4>Free</h4><ul><li>Live waveform, 0.2 ms to 2 s</li><li>Pinch zoom, full screen</li><li>Freeze, test tone</li></ul></div>
+        <div><h4 class="p">Pro</h4><ul><li>Trigger with level and edge</li><li>Average 4, 16 or 64 sweeps</li><li>Snapshots as references</li><li>CSV export</li></ul></div>
+        <div class="price"><b>$4.99</b> once for Pro</div>
+        <div class="store" data-app="oscope" data-compact></div>
+      </article>
+      <article class="plan" style="--accent: var(--octave)">
+        <header><img src="icons/octave.png" alt=""><h3>Octave<small>real-time analyzer</small></h3></header>
+        <div><h4>Free</h4><ul><li>ANSI / IEC bands, 1 to 1/12 octave</li><li>Fast weighting, RMS dBFS</li><li>Tap a band to read it</li></ul></div>
+        <div><h4 class="p">Pro</h4><ul><li>Leq averaging</li><li>Slow, Quick and Leq weighting</li><li>Peak hold, floor and ceiling</li><li>Snapshots and pink noise</li><li>CSV export</li></ul></div>
+        <div class="price"><b>$14.99</b> once for Pro</div>
+        <div class="store" data-app="octave" data-compact></div>
+      </article>
+      <article class="plan" style="--accent: var(--soundscape)">
+        <header><img src="icons/soundscape.png" alt=""><h3>Soundscape<small>spectrogram</small></h3></header>
+        <div><h4>Free</h4><ul><li>Live spectrogram</li><li>Touch readout: Hz, level, note</li><li>Two color maps, short history</li></ul></div>
+        <div><h4 class="p">Pro</h4><ul><li>Record and replay, up to 10 min</li><li>Compare snapshots side by side</li><li>Long history, more color maps</li><li>Decibel scale, FFT window</li><li>CSV export</li></ul></div>
+        <div class="price"><b>$7.99</b> once for Pro</div>
+        <div class="store" data-app="soundscape" data-compact></div>
+      </article>
+    </div>
+    <div class="promises">
+      <div class="promise"><h3>Try before you buy</h3><p>Every Pro control can be tried three times in the app, so you know it does the job first.</p></div>
+      <div class="promise"><h3>Bought it years ago?</h3><p>If you bought Fourier, oScope or Octave before, Pro is already yours. Open the update on the same Apple Account.</p></div>
+      <div class="promise"><h3>No strings</h3><p>No subscription, no ads, no account. Audio is analyzed on your device and never leaves it.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="notes">
+  <div class="wrap notes-grid">
+    <div>
+      <div class="eyebrow">About the films</div>
+      <h2>Every frame of every app is real.</h2>
+      <p>Each film has its own piece of music. <strong>The music was played into the app in one continuous take</strong>, so what you see on the phone is the app drawing the song you hear: Fourier finding the harmonics, oScope locking the waves, Octave catching the bass, Soundscape spelling out words hidden in the overtones.</p>
+      <p>No mockups and no retouching inside the screen. The captions, the harmonic labels and the white touch rings sit on top.</p>
+    </div>
+    <div>
+      <div class="eyebrow">Since 2009</div>
+      <h2>Old instruments, rebuilt.</h2>
+      <p>These began in 2009 as iPhone apps. In 2026 every one was rebuilt from scratch, with a shared C++ signal-processing core, low-latency native audio and Metal graphics, for iPhone and iPad.</p>
+      <ol class="timeline">
+        <li><b>2009</b><span>oScope starts as an iPhone project: a continuous waveform, a triggered single shot, an FFT.</span></li>
+        <li><b>2010</b><span>Fourier and Octave join it on the App Store.</span></li>
+        <li><b>2012</b><span>A Soundscape prototype draws frequency history. It never ships.</span></li>
+        <li><b>2026</b><span>All four rebuilt and free. Soundscape ships at last.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="help" id="help">
+  <div class="wrap">
+    <div class="eyebrow">Help &amp; support</div>
+    <h2>Getting the most from the instruments</h2>
+    <div class="help-grid">
+      <div><h3>Getting started</h3><p>Allow microphone access when the app asks. Analysis runs locally on your device. Settings includes a synthetic demo signal, so you can explore the controls without the microphone.</p></div>
+      <div><h3>Is it really free?</h3><p>Yes. Each app is free with no time limit: the live display, touch readouts, zoom and freeze. Pro is an optional one-time purchase per app. Controls marked PRO can each be tried three times; data export has no tries.</p></div>
+      <div><h3>I bought the app before</h3><p>Pro unlocks on its own when you open the update signed in to the Apple Account you bought it with. If it doesn't, open the Pro sheet and tap Restore Purchases.</p></div>
+      <div><h3>Freezing, measuring, exporting</h3><p>Tap Freeze to hold the display and Resume to return to live audio. Touch the spectrum, octave graph or spectrogram to measure a frequency. Triple-tap or use Reset to clear peaks or history. With Pro, the share button exports CSV data.</p></div>
+      <div><h3>Choosing response speed</h3><p>Short FFT windows respond quickly; long windows show more detail at low frequencies. Narrow octave bands take longer to settle. Response depends on the device, microphone, display and audio route; Bluetooth can add a lot of delay.</p></div>
+      <div><h3>Reading levels</h3><p>Spectrum and spectrogram levels are peak dBFS; octave bands are RMS dBFS. These are digital signal levels, not calibrated sound-pressure measurements, so use them to compare shapes and changes rather than absolute loudness. Waveforms use full-scale amplitude.</p></div>
+      <div><h3>Microphone troubleshooting</h3><p>If the microphone is unavailable, open iOS Settings › Privacy &amp; Security › Microphone and allow the app. Reconnect external audio hardware and restart capture from the app's Settings. Capture stops in the background and resumes when iOS allows it.</p></div>
+      <div><h3>Support</h3><p><a href="https://github.com/alexbw/oScope-Website/issues/new">Open a support issue</a> with the app name and version, your iPhone or iPad model, the iOS version, the audio input and the steps that cause the problem. GitHub issues are public.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="press" id="press">
+  <div class="wrap press-grid">
+    <div>
+      <div class="eyebrow">Press and creators</div>
+      <h2>Films, icons and facts</h2>
+      <p>Use any of these in coverage or videos. The films are 720p web copies of 1080 × 1920 masters, with sound.</p>
+      <dl class="facts">
+        <dt>Maker</dt><dd>Alex Wiltschko</dd>
+        <dt>Press</dt><dd><span class="select">press@pocketinstruments.app</span></dd>
+        <dt>First released</dt><dd>oScope 2009; Fourier and Octave 2010; Soundscape 2026</dd>
+        <dt>Platforms</dt><dd>iPhone and iPad, iOS 17 or later</dd>
+        <dt>Price</dt><dd>Free; Pro $4.99 to $14.99 once per app</dd>
+        <dt>Privacy</dt><dd>No data collected; audio stays on the device</dd>
+      </dl>
+    </div>
+    <ul class="files">
+      <li><a href="media/soundinstruments.mp4" download>Trailer.mp4</a> <small>32 s</small></li>
+      <li><a href="media/fourier.mp4" download>Fourier.mp4</a> <small>50 s</small></li>
+      <li><a href="media/oscope.mp4" download>oScope.mp4</a> <small>41 s</small></li>
+      <li><a href="media/octave.mp4" download>Octave.mp4</a> <small>42 s</small></li>
+      <li><a href="media/soundscape.mp4" download>Soundscape.mp4</a> <small>52 s</small></li>
+      <li><a href="media/share.jpg" download>Share image</a> <small>1200 × 630</small></li>
+      <li><a href="icons/fourier.png" download>Fourier icon</a></li>
+      <li><a href="icons/oscope.png" download>oScope icon</a></li>
+      <li><a href="icons/octave.png" download>Octave icon</a></li>
+      <li><a href="icons/soundscape.png" download>Soundscape icon</a></li>
+    </ul>
+  </div>
+</section>
+
+<footer class="wrap">
+  <span>© 2026 Alex Wiltschko · Pocket Instruments</span>
+  <span><a href="privacy.html">Privacy policy</a> · <a href="https://github.com/alexbw/oScope-Website/issues">Report an issue</a></span>
+</footer>
+
+<script>
+(() => {
+  // App Store links. Each app switches from "coming soon" to a download button by itself as soon as
+  // Apple's lookup API returns its listing, so launch day needs no redeploy.
+  const APPS = {
+    fourier:    { id: '386084557',  name: 'Fourier' },
+    oscope:     { id: '344345859',  name: 'oScope' },
+    octave:     { id: '386083594',  name: 'Octave' },
+    soundscape: { id: '6819117901', name: 'Soundscape' },
+  };
+  // App Store Connect provider token (App Analytics › Campaigns). With it, every ct below is reported per campaign.
+  const PROVIDER_TOKEN = '';
+  // Force every app live, e.g. for a preview. Normally false: the lookup decides.
+  const FORCE_LIVE = new URLSearchParams(location.search).has('live');
+
+  // Campaign: ?c=reddit-carav on the page URL becomes ct=reddit-carav on every App Store link.
+  const raw = new URLSearchParams(location.search).get('c') || '';
+  // Apple allows up to 30 characters in ct.
+  const campaign = raw.toLowerCase().replace(/[^a-z0-9._-]/g, '').slice(0, 30) || 'site';
+
+  const storeURL = (app) => {
+    const q = new URLSearchParams();
+    if (PROVIDER_TOKEN) q.set('pt', PROVIDER_TOKEN);
+    q.set('ct', campaign);
+    q.set('mt', '8');
+    return `https://apps.apple.com/app/apple-store/id${APPS[app].id}?${q}`;
+  };
+
+  const render = (live) => {
+    document.querySelectorAll('.store[data-app]').forEach(el => {
+      const app = el.dataset.app, name = APPS[app].name, compact = el.hasAttribute('data-compact');
+      el.textContent = '';
+      if (live.has(app)) {
+        const a = document.createElement('a');
+        a.className = 'get'; a.href = storeURL(app); a.rel = 'noopener';
+        a.textContent = compact ? 'Get it free' : `Get ${name} free on the App Store`;
+        a.setAttribute('aria-label', `Get ${name} free on the App Store`);
+        el.append(a);
+      } else {
+        const s = document.createElement('span');
+        s.className = 'soon'; s.textContent = compact ? 'Coming soon' : `${name} · coming soon, free`;
+        el.append(s);
+        if (!compact) { const d = document.createElement('span'); d.textContent = 'iPhone & iPad'; el.append(d); }
+      }
+    });
+    const any = live.size > 0, all = live.size === Object.keys(APPS).length;
+    document.getElementById('status').textContent =
+      all ? 'Free on the App Store' : any ? 'Rolling out on the App Store now' : 'Coming soon to the App Store, free';
+    document.getElementById('hero-get').hidden = !any;
+  };
+
+  render(new Set(FORCE_LIVE ? Object.keys(APPS) : []));
+  if (!FORCE_LIVE) {
+    const ids = Object.values(APPS).map(a => a.id).join(',');
+    fetch(`https://itunes.apple.com/lookup?id=${ids}&entity=software`)
+      .then(r => r.json())
+      .then(d => {
+        const found = new Set((d.results || []).map(r => String(r.trackId)));
+        render(new Set(Object.keys(APPS).filter(k => found.has(APPS[k].id))));
+      })
+      .catch(() => {});
+  }
+
+  // Films: the trailer loops silently; any other film pauses the rest.
+  const films = [...document.querySelectorAll('.film')];
+  const pauseOthers = (except) => films.forEach(f => {
+    const v = f.querySelector('video');
+    if (f !== except && !v.muted) { v.pause(); f.classList.remove('playing'); }
+  });
+
+  films.forEach(film => {
+    const video = film.querySelector('video');
+    const button = film.querySelector('.play');
+    if (film.hasAttribute('data-autoplay')) {
+      // The silent loop skips the trailer's slow black opening and starts on the four apps.
+      const LOOP_FROM = 4.2;
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      video.loop = false;
+      video.addEventListener('ended', () => { if (video.muted) { video.currentTime = LOOP_FROM; video.play().catch(() => {}); } });
+      if (!reduce) {
+        const start = () => { video.currentTime = LOOP_FROM; video.play().catch(() => {}); };
+        if (video.readyState >= 1) start(); else video.addEventListener('loadedmetadata', start, { once: true });
+      }
+      button.addEventListener('click', () => {
+        pauseOthers(film);
+        video.muted = false; video.currentTime = 0; video.loop = false; video.controls = true;
+        video.play().catch(() => {});
+        film.classList.add('playing');
+      });
+      return;
+    }
+    button.addEventListener('click', () => {
+      pauseOthers(film);
+      const trailer = document.getElementById('trailer');
+      if (!trailer.muted) { trailer.pause(); }
+      video.controls = true;
+      video.play().catch(() => {});
+      film.classList.add('playing');
+    });
+    video.addEventListener('ended', () => film.classList.remove('playing'));
+  });
+})();
+</script>
+</body>
+</html>
