@@ -554,14 +554,15 @@ footer { padding-block: 36px 56px; border-top: 1px solid var(--graticule); font:
 
   // Campaign: ?c=reddit-carav on the page URL becomes ct=reddit-carav on every App Store link.
   const raw = new URLSearchParams(location.search).get('c') || '';
-  const campaign = raw.toLowerCase().replace(/[^a-z0-9._-]/g, '').slice(0, 40) || 'site';
+  // Apple allows up to 30 characters in ct.
+  const campaign = raw.toLowerCase().replace(/[^a-z0-9._-]/g, '').slice(0, 30) || 'site';
 
   const storeURL = (app) => {
     const q = new URLSearchParams();
     if (PROVIDER_TOKEN) q.set('pt', PROVIDER_TOKEN);
     q.set('ct', campaign);
     q.set('mt', '8');
-    return `https://apps.apple.com/app/id${APPS[app].id}?${q}`;
+    return `https://apps.apple.com/app/apple-store/id${APPS[app].id}?${q}`;
   };
 
   const render = (live) => {
